@@ -18,6 +18,10 @@ const fromPrisma = (err) => {
 
 // Manejador de errores: 4 parámetros. Responde siempre en JSON.
 const errorHandler = (err, req, res, next) => {
+    // MongoDB: índice único repetido (E11000) → 409
+  if (err.code === 11000) {
+    return res.status(409).json({ error: `Ya existe un registro con ese ${Object.keys(err.keyValue)[0]}` });
+  }
   // Mongoose: ValidationError → 400 con un mensaje por campo
   if (err.name === "ValidationError") {
     const errors = Object.values(err.errors).map((e) => ({ campo: e.path, mensaje: e.message }));
