@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique @db.VarChar(120)
+  password  String
+  name      String   @db.VarChar(100)
+  role      Role     @default(USER)
+  createdAt DateTime @default(now()) @map("created_at")
+  loans     Loan[]
+
+  @@map("users")
+}
+
+// Préstamo: 1:N con User. bookId es el _id del libro en MongoDB (sin FK)
+model Loan {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookId       String?   @map("book_id") @db.VarChar(24)
+  // = bookId mientras el préstamo está activo, null al devolver: un libro no se presta dos veces a la vez
+  activeBookId String?   @unique @map("active_book_id") @db.VarChar(24)
+  loanDate     DateTime  @default(now()) @map("loan_date")
+  dueDate      DateTime  @map("due_date")
+  returnedAt   DateTime? @map("returned_at")
+
+  @@index([bookId])
+  @@index([userId])
+  @@map("loans")
+}
