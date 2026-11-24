@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Book = require("../models/book.model");
 const prisma = require("../db/prisma");
 const HttpError = require("../utils/httpError");
+const Review = require("../models/review.model");
 
 const checkId = (id) => {
   if (!mongoose.isValidObjectId(id)) throw new HttpError(400, "El id del libro no es válido");
@@ -42,7 +43,7 @@ const remove = async (id) => {
   const loans = await prisma.loan.count({ where: { bookId: id } });
   if (loans > 0) throw new HttpError(409, `No se puede eliminar: el libro tiene ${loans} préstamo(s)`);
   await book.deleteOne();
-  // Fase 4: aquí se agrega el borrado en cascada de sus reseñas
+  await Review.deleteMany({ book: id }); // cascada: borra sus reseñas en MongoDB
 };
 
 module.exports = { list, getById, create, update, remove };

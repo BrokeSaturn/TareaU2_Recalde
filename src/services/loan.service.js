@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const prisma = require("../db/prisma");
 const Book = require("../models/book.model");
 const HttpError = require("../utils/httpError");
+const Review = require("../models/review.model");
 
 // Busca el préstamo y comprueba que sea del usuario del token
 const findOwn = async (userId, id) => {
@@ -53,7 +54,7 @@ const myLoans = async (userId) => {
 const remove = async (userId, id) => {
   await findOwn(userId, id);
   await prisma.loan.delete({ where: { id } });
-  // Fase 4: aquí se borra también su reseña en MongoDB
+  await Review.deleteMany({ loanId: id }); // cascada: borra su reseña en MongoDB
 };
 
 module.exports = { create, giveBack, myLoans, remove };
